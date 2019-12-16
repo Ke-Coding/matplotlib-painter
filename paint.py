@@ -1,12 +1,9 @@
 import numpy as np
 import torch as tc
 import matplotlib.pyplot as plt
-import matplotlib
 from matplotlib.backends.backend_pdf import PdfPages
 
 from utils.data_util import sort_y, get_axis_tick
-from utils.font_util import GENERAL_FONT_SIZE, LEGEND_FONT_SIZE
-from utils.font_util import general_font_prop, legend_font_prop
 
 
 def render(save_pdf: bool, figure_name: str):
@@ -64,20 +61,18 @@ def paint_segments(save_pdf: bool):
              marker='^', ls=(0, (6, 2)), ms=8, lw=1.2)
     
     x_bg, x_ed = 100, 270
-    plt.xlabel('FLOPs(G)', fontdict=general_font_prop())
+    plt.xlabel('FLOPs(G)')
     plt.xlim(x_bg, x_ed)
     vals, texts = get_axis_tick(x_bg, x_ed, 20)
     plt.xticks(vals, texts)
     
     y_bg, y_ed = 30.0, 42.0
-    plt.ylabel('AP', fontdict=general_font_prop())
+    plt.ylabel('AP')
     plt.ylim(y_bg, y_ed)
     vals, texts = get_axis_tick(y_bg, y_ed, 2.0)
     plt.yticks(vals, texts)
     
-    matplotlib.rcParams.update({'font.size': LEGEND_FONT_SIZE})
-    plt.tick_params(labelsize=GENERAL_FONT_SIZE)
-    plt.legend(loc='lower right', title='SCR-Backbone(stage)', prop=legend_font_prop())
+    plt.legend(loc='lower right', title='SCR-Backbone(stage)')
     render(save_pdf, 'pic_line')
 
 
@@ -135,29 +130,27 @@ def paint_scatters(save_pdf: bool):
     plt.scatter(x2, y2, label='R101 FLOPs', s=78, ec='black', fc='skyblue', marker='s', lw=0.8)
     plt.scatter(x2_max, y2_max, label='R101 FLOPs (best)', s=150, ec='black', fc='skyblue', marker='*', lw=0.8)
     plt.annotate("(%.1f, %.1f)" % (x1_max[0], y1_max[0]), xy=(x1_max[0], y1_max[0]),
-                 xytext=(x1_max[0] - 0.268, y1_max[0] + 0.17), fontsize=GENERAL_FONT_SIZE)
+                 xytext=(x1_max[0] - 0.268, y1_max[0] + 0.17))
     plt.annotate("(%.1f, %.1f)" % (x2_max[0], y2_max[0]), xy=(x2_max[0], y2_max[0]),
-                 xytext=(x2_max[0] - 0.268, y2_max[0] + 0.17), fontsize=GENERAL_FONT_SIZE)
+                 xytext=(x2_max[0] - 0.268, y2_max[0] + 0.17))
     
     # plt.grid(True, c='silver')
     
     x_bg, x_ed = 75.0, 78.0
-    plt.xlabel('Top1 Acc.', fontdict=general_font_prop())
+    plt.xlabel('Top1 Acc.')
     plt.xlim(x_bg, x_ed)
     vals, texts = get_axis_tick(x_bg, x_ed, 0.5)
     plt.xticks(vals, texts)
     # plt.gca().xaxis.set_minor_locator(plt.IndexLocator(base=x_bg, offset=0.5))
     
     y_bg, y_ed = 36.0, 41.0
-    plt.ylabel('AP', fontdict=general_font_prop())
+    plt.ylabel('AP')
     plt.ylim(y_bg, y_ed)
     vals, texts = get_axis_tick(y_bg, y_ed, 1.0)
     plt.yticks(vals, texts)
     # plt.gca().yaxis.set_minor_locator(plt.IndexLocator(base=y_bg, offset=1))
     
-    matplotlib.rcParams.update({'font.size': LEGEND_FONT_SIZE + .5})
-    plt.tick_params(labelsize=GENERAL_FONT_SIZE)
-    plt.legend(loc='lower right', title=' FLOPs equivalent ', prop=legend_font_prop())
+    plt.legend(loc='lower right', title=' FLOPs equivalent ')
     render(save_pdf, 'pic_point')
 
 
@@ -205,8 +198,8 @@ def paint_hot(save_pdf: bool):
 
 
 def main():
-    chosen = 'func'
-    save_pdf = False
+    chosen = 'sca'
+    save_pdf = True
     
     paint = {
         'sca': paint_scatters,
@@ -218,6 +211,20 @@ def main():
 
 
 if __name__ == '__main__':
+    LEGEND_FONT_SIZE = 12.5
+    GENERAL_FONT_SIZE = 14.5
+    plt.rcParams.update({
+        # 'figure.dpi': 200,  # 300 => 1800*1200, 200 => 1200*800
+        # 'savefig.dpi': 200,  # 300 => 1800*1200, 200 => 1200*800
+        'figure.figsize': (7.2, 4.8),
+        'font.size': LEGEND_FONT_SIZE,              # legend title
+        'legend.fontsize': LEGEND_FONT_SIZE,        # legend label
+        'axes.titlesize': GENERAL_FONT_SIZE,        # fig title
+        'axes.labelsize': GENERAL_FONT_SIZE,        # axes label
+        'xtick.labelsize': GENERAL_FONT_SIZE,       # xtick label
+        'ytick.labelsize': GENERAL_FONT_SIZE,       # ytick label
+        # 'figure.titlesize': GENERAL_FONT_SIZE,    # unknown
+    })
     main()
 
 """
