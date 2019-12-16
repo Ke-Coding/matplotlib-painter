@@ -170,7 +170,7 @@ def paint_func(save_pdf: bool):
     for i in range(500):
         ideal[i] += 1
     
-    hinge = 1 - X
+    hinge = -(X - 1)
     for i in range(1000):
         if hinge[i] <= 0:
             hinge[i] = 0
