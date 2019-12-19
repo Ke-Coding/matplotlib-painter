@@ -6,9 +6,10 @@ from tensorboardX import SummaryWriter
 
 CURR_PATH = os.path.split(os.path.realpath(__file__))[0]
 
-w = SummaryWriter(log_dir=CURR_PATH)
+writer = SummaryWriter(CURR_PATH)
+for i in range(10):
+    x = np.random.random(10)
+    x = tc.softmax(tc.from_numpy(x), dim=0)
+    writer.add_histogram('distribution centers', x, i, 'fd')
 
-X = [np.linspace(i, i+2, 11) for i in range(5)]
-for i, x in enumerate(X):
-    print(f'{i}: {x}')
-    # w.add_histogram('a', x, i)
+writer.close()
