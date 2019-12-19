@@ -1,9 +1,13 @@
+import os
 import numpy as np
 import torch as tc
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 
-from utils.data_util import sort_y, get_axis_tick
+from plt.utils.data_util import sort_y, get_axis_tick
+
+
+CURR_PATH = os.path.split(os.path.realpath(__file__))[0]
 
 
 def render(save_pdf: bool, figure_name: str):
@@ -11,7 +15,7 @@ def render(save_pdf: bool, figure_name: str):
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     if save_pdf:
-        pdf = PdfPages(figure_name + '.pdf')
+        pdf = PdfPages(os.path.join(CURR_PATH, f'{figure_name}.pdf'))
         pdf.savefig()
         plt.close()
         pdf.close()
@@ -198,7 +202,7 @@ def paint_hot(save_pdf: bool):
 
 
 def main():
-    chosen = 'sca'
+    chosen = 'func'
     save_pdf = True
     
     paint = {
