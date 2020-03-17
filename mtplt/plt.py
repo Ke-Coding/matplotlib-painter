@@ -2,9 +2,10 @@ import os
 import numpy as np
 import torch as tc
 import matplotlib.pyplot as plt
+from scipy.special import gamma
 from matplotlib.backends.backend_pdf import PdfPages
 
-from plt.utils.data_util import sort_y, get_axis_tick
+from mtplt.utils.data_util import sort_y, get_axis_tick
 
 
 CURR_PATH = os.path.split(os.path.realpath(__file__))[0]
@@ -20,7 +21,7 @@ def render(save_pdf: bool, figure_name: str):
         plt.close()
         pdf.close()
     else:
-        plt.title(figure_name)
+        plt.title(figure_name, pad=30)
         plt.show()
 
 
@@ -51,7 +52,7 @@ def paint_segments(save_pdf: bool):
              marker='o', ls='-', ms=8, lw=1.2)
     plt.plot(x2, y2, label='SCR-ResNet', c='deepskyblue', mec='deepskyblue', mfc='white',
              marker='o', ls=(0, (6, 2)), ms=8, lw=1.2)
-    # plt.plot(x3, y3, label='ResNet-HS', c='steelblue', mec='steelblue', mfc='white',
+    # pyplt.plot(x3, y3, label='ResNet-HS', c='steelblue', mec='steelblue', mfc='white',
     # 		 marker='o', ls=(0, (6, 2)), ms=8, lw=1.2)
     
     plt.plot(x4, y4, label='ResNeXt', c='lightcoral', mec='lightcoral', mfc='lightcoral',
@@ -138,41 +139,41 @@ def paint_scatters(save_pdf: bool):
     plt.annotate("(%.1f, %.1f)" % (x2_max[0], y2_max[0]), xy=(x2_max[0], y2_max[0]),
                  xytext=(x2_max[0] - 0.268, y2_max[0] + 0.17))
     
-    # plt.grid(True, c='silver')
+    # pyplt.grid(True, c='silver')
     
     x_bg, x_ed = 75.0, 78.0
     plt.xlabel('Top1 Acc.')
     plt.xlim(x_bg, x_ed)
     vals, texts = get_axis_tick(x_bg, x_ed, 0.5)
     plt.xticks(vals, texts)
-    # plt.gca().xaxis.set_minor_locator(plt.IndexLocator(base=x_bg, offset=0.5))
+    # pyplt.gca().xaxis.set_minor_locator(pyplt.IndexLocator(base=x_bg, offset=0.5))
     
     y_bg, y_ed = 36.0, 41.0
     plt.ylabel('AP')
     plt.ylim(y_bg, y_ed)
     vals, texts = get_axis_tick(y_bg, y_ed, 1.0)
     plt.yticks(vals, texts)
-    # plt.gca().yaxis.set_minor_locator(plt.IndexLocator(base=y_bg, offset=1))
+    # pyplt.gca().yaxis.set_minor_locator(pyplt.IndexLocator(base=y_bg, offset=1))
     
     plt.legend(loc='lower right', title=' FLOPs equivalent ')
     render(save_pdf, 'pic_point')
 
 
 def paint_func(save_pdf: bool):
-    X = tc.linspace(-3, 3, 1000)
+    x = tc.linspace(-3, 3, 1000)
     
-    se = (X - 1) * (X - 1)
+    se = (x - 1) * (x - 1)
     
     ideal = tc.zeros(1000)
     for i in range(500):
         ideal[i] += 1
     
-    hinge = -(X - 1)
+    hinge = -(x - 1)
     for i in range(1000):
         if hinge[i] <= 0:
             hinge[i] = 0
     
-    sig = tc.sigmoid(X) - 1
+    sig = tc.sigmoid(x) - 1
     sig = sig * sig
     
     ce = np.exp(-1 * np.linspace(-2.5, 2.5, 1000)) + 1
@@ -181,11 +182,11 @@ def paint_func(save_pdf: bool):
     
     plt.figure()
     plt.grid(True)
-    plt.plot(X, ideal, label='Ideal Error', c='black', ls='-', lw=2)
-    plt.plot(X, se, label='Square Error', c='steelblue', ls='-', lw=2)
-    plt.plot(X, ce, label='Log Sigmoid', c='tomato', ls='-', lw=2)
-    plt.plot(X, hinge, label='Hinge', c='forestgreen', ls='-', lw=2)
-    plt.plot(X, sig, label='Sigmoid Square', c='orange', ls='-', lw=2)
+    plt.plot(x, ideal, label='Ideal Error', c='black', ls='-', lw=2)
+    plt.plot(x, se, label='Square Error', c='steelblue', ls='-', lw=2)
+    plt.plot(x, ce, label='Log Sigmoid', c='tomato', ls='-', lw=2)
+    plt.plot(x, hinge, label='Hinge', c='forestgreen', ls='-', lw=2)
+    plt.plot(x, sig, label='Sigmoid Square', c='orange', ls='-', lw=2)
     
     plt.xlabel('g(x)*f(x)')
     plt.ylabel('loss')
@@ -196,27 +197,127 @@ def paint_func(save_pdf: bool):
     render(save_pdf, 'pic_func')
 
 
+def paint_gaussian(save_pdf: bool):
+    mu, sigma = 0, 1
+    x = tc.linspace(mu-3*sigma, mu+3*sigma, 1024)
+    
+    gp = tc.exp(-((x - mu)**2) / (2*sigma**2)) / (sigma * np.sqrt(2*np.pi))
+    sig_gp = tc.sigmoid(gp) - 0.5
+
+    plt.figure()
+    plt.grid(True)
+    plt.plot(x, gp, label='Gaussian', c='black', ls='-', lw=1)
+    plt.plot(x, sig_gp, label='Sigmoid Gaussian', c='steelblue', ls='-', lw=1)
+
+    plt.xlabel('x')
+    plt.ylabel('y')
+
+    plt.legend(loc='best', title='PDF')
+    render(save_pdf, 'pic_gaussian')
+
+
+def paint_generalized_gaussian(save_pdf: bool):
+    # https://en.wikipedia.org/wiki/Generalized_normal_distribution
+    mu, sigma = 0, 1
+    x = tc.linspace(mu-3*sigma, mu+3*sigma, 1024)
+    
+    plt.figure()
+    plt.grid(True)
+    
+    properties = [
+        (1, 'Laplace', 'tomato'),
+        (2, 'Gaussian', 'orange'),
+        (4, 'Almost Gaussian', 'forestgreen'),
+        (8, 'Median', 'steelblue'),
+        (1024, 'Almost Uniform', 'purple'),
+    ]
+    for beta, name, color in properties:
+        alpha = sigma * np.sqrt(gamma(1/beta) / gamma(3/beta))
+        gp = beta / (2 * alpha * gamma(1./beta)) * tc.exp(-tc.pow(tc.abs(x-mu)/alpha, beta))
+        plt.plot(x, gp, label=r'$\beta$={}: {}'.format(beta, name), c=color, ls='-', lw=1)
+    
+    plt.xlabel('x')
+    plt.ylabel('y')
+    
+    plt.legend(loc='best', title='PDF')
+    render(save_pdf, 'pic_g_gaussian')
+
+
 def paint_hot(save_pdf: bool):
     
     render(save_pdf, 'pic_hot')
 
 
 def main():
-    chosen = 'func'
-    save_pdf = True
+    chosen = 'ggau'
+    save_pdf = False
     
     paint = {
         'sca': paint_scatters,
         'func': paint_func,
         'seg': paint_segments,
-        'hot': paint_hot
+        'hot': paint_hot,
+        'gau': paint_gaussian,
+        'ggau': paint_generalized_gaussian,
     }[chosen]
     paint(save_pdf)
 
 
+def plot_curves():
+    import json
+    plt.figure(num='result', figsize=(8.5, 6))
+    
+    def get_li(fname):
+        path = '/Users/tiankeyu/Downloads/avgacc'
+        path = os.path.join(path, fname + '.json')
+        li = []
+        with open(path, 'r') as f:
+            li = json.load(f)
+        li = [x[2] for x in li]
+        vv = li[0]
+        ml = [vv]
+        gm = 0.86
+        for i in range(len(li)):
+            if i > 0:
+                vv = vv*gm + li[i] * (1-gm)
+                ml.append(vv)
+        li = ml
+        
+        li = np.array(li)
+        li = - li[:50].mean() + li + 96.585
+        
+        print(f'len({fname}) == {len(li)}')
+        return li
+    
+    best_li = get_li('best')
+    alr1_li = get_li('alr0.5')
+    alr001_li = get_li('alr0.05')
+    q8_li = get_li('freq8')
+    q128_li = get_li('freq128')
+    
+    ll = min([len(best_li), len(alr1_li), len(alr001_li), len(q8_li), len(q128_li)])
+    best_li = best_li[:ll]
+    alr1_li = alr1_li[:ll]
+    alr001_li = alr001_li[:ll]
+    q8_li = q8_li[:ll]
+    q128_li = q128_li[:ll]
+
+    plt.plot(list(range(ll)), best_li, label='$\\eta_\\theta=0.1$, $N_b=32$', c='steelblue')
+    plt.plot(list(range(ll)), alr001_li, label='$\\eta_\\theta=0.01$, $N_b=32$', c='tomato')
+    plt.plot(list(range(ll)), alr1_li, label='$\\eta_\\theta=1$, $N_b=32$', c='darkviolet')
+    # plt.plot(list(range(ll)), q8_li, label='$\\eta_\\theta=0.1$, $N_b=8$', c='tomato')
+    # plt.plot(list(range(ll)), q128_li, label='$\\eta_\\theta=0.1$, $N_b=128$', c='darkviolet')
+    
+    plt.xlabel('one-shot search times', labelpad=25)
+    plt.ylabel(r'moving average of ACC$(\bar{\omega}_{\theta}^*)$', labelpad=32)
+    plt.legend(loc='upper left')
+    
+    render(False, 'Sensitivity to $\\eta_\\theta$')
+
+
 if __name__ == '__main__':
-    LEGEND_FONT_SIZE = 12.5
-    GENERAL_FONT_SIZE = 14.5
+    LEGEND_FONT_SIZE = 22
+    GENERAL_FONT_SIZE = 25
     plt.rcParams.update({
         # 'figure.dpi': 200,  # 300 => 1800*1200, 200 => 1200*800
         # 'savefig.dpi': 200,  # 300 => 1800*1200, 200 => 1200*800
@@ -224,12 +325,13 @@ if __name__ == '__main__':
         'font.size': LEGEND_FONT_SIZE,              # legend title
         'legend.fontsize': LEGEND_FONT_SIZE,        # legend label
         'axes.titlesize': GENERAL_FONT_SIZE,        # fig title
-        'axes.labelsize': GENERAL_FONT_SIZE,        # axes label
+        'axes.labelsize': GENERAL_FONT_SIZE + 2,        # axes label
         'xtick.labelsize': GENERAL_FONT_SIZE,       # xtick label
         'ytick.labelsize': GENERAL_FONT_SIZE,       # ytick label
         # 'figure.titlesize': GENERAL_FONT_SIZE,    # unknown
     })
-    main()
+    # main()
+    plot_curves()
 
 """
 's' : 方块状

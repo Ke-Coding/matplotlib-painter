@@ -10,6 +10,6 @@ def sort_y(x, y):
     return x, y
 
 
-def get_axis_tick(begin, end, pace):
+def get_axis_tick(begin, end, pace, div=1):
     vals = np.arange(begin, end + pace, pace)
-    return vals, [str(i) for i in vals]
+    return vals, [f'{i / div : .2g}' for i in vals]
